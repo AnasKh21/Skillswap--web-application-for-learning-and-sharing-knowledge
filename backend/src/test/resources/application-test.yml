@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+
+app:
+  jwt:
+    secret: TestSecretKeyForJUnitTestsMustBeAtLeast256BitsLong!!
+    expiration-ms: 3600000
+    refresh-expiration-ms: 86400000
+  matching:
+    weights:
+      bilateral: 0.50
+      common-skills: 0.20
+      reputation: 0.20
+      recent-activity: 0.10
+    activity-threshold-days: 30
+    page-size: 20

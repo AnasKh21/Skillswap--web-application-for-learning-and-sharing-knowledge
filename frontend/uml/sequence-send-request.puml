@@ -1,0 +1,59 @@
+@startuml SkillSwap Sequence — Send Session Request
+
+skinparam backgroundColor #FFFBF5
+skinparam sequence {
+  ParticipantBackgroundColor #FFFFFF
+  ParticipantBorderColor #FF6B35
+  ArrowColor #FF6B35
+  LifeLineBorderColor #FFB703
+}
+skinparam actor {
+  BackgroundColor #FF6B35
+  BorderColor #E63946
+  FontColor #FFFFFF
+}
+
+title SkillSwap — Sequence: Swipe Right → Session Request
+
+actor "User A\n(Initiator)" as A
+participant "DiscoverPage" as discover
+participant "SwipeCard\n(Framer Motion)" as card
+participant "AuthContext" as ctx
+participant "api/sessions.js" as api
+participant "Spring Boot\n/api/sessions/requests" as backend
+database "PostgreSQL" as db
+actor "User B\n(Receiver)" as B
+
+A -> discover : Opens Discover
+discover -> card : Renders top user card
+A -> card : Drags right (x > 120px)
+card -> discover : onLike(user)
+discover -> ctx : Get currentUser.id
+ctx --> discover : initiatorId
+
+discover -> api : sendRequest(initiatorId, receiverId,\n offeredSkillId, wantedSkillId, message)
+api -> backend : POST /api/sessions/requests
+backend -> db : INSERT session_request (PENDING)
+db --> backend : savedRequest
+backend --> api : 201 Created { requestId }
+api --> discover : { id, status: PENDING }
+
+discover -> discover : Remove card from stack
+note right of discover : "Card flies off screen\n(Framer Motion animation)"
+
+B -> B : Receives notification\n(future feature)
+B -> B : Opens RequestsPage\n(Incoming tab)
+B -> backend : GET /api/sessions/requests/pending/{userId}
+backend -> db : SELECT where receiver_id = B AND status = PENDING
+db --> backend : [requests]
+backend --> B : List<SessionRequest>
+
+B -> backend : POST /api/sessions/requests/{id}/accept\n{ scheduledAt, mode, location }
+backend -> db : UPDATE request status = ACCEPTED
+backend -> db : INSERT session (SCHEDULED)
+db --> backend : savedSession
+backend --> B : 200 OK { sessionId }
+
+note over A, B : Both users now have a SCHEDULED session\nin their SessionsPage
+
+@enduml

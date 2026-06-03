@@ -1,0 +1,42 @@
+@startuml SkillSwap Navigation Flow
+
+skinparam backgroundColor #FFFBF5
+skinparam state {
+  BackgroundColor #FFFFFF
+  BorderColor #FF6B35
+  FontColor #1A1A2E
+}
+skinparam arrow {
+  Color #FF6B35
+  FontColor #1A1A2E
+}
+
+title SkillSwap — Page Navigation & Routing
+
+state "Not Authenticated" as unauth {
+  state "AuthPage\n(Login / Register)" as authpage
+}
+
+state "Authenticated" as auth {
+  state "DiscoverPage\n(Swipe cards)" as discover
+  state "RequestsPage\n(Incoming / Outgoing)" as requests
+  state "SessionsPage\n(Upcoming / History)" as sessions
+  state "ProfilePage\n(Edit profile & skills)" as profile
+}
+
+[*] --> authpage : First visit
+
+authpage -right-> discover : Sign in / Register
+
+discover --> requests  : Navigate (nav bar)
+discover --> sessions  : Navigate (nav bar)
+discover --> profile   : Navigate (nav bar)
+
+requests --> sessions  : Accept request → session created
+sessions --> sessions  : Rate modal (overlay)
+
+profile --> discover   : Start discovering
+
+auth --> authpage : Logout
+
+@enduml

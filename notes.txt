@@ -1,0 +1,58 @@
+========================================
+SKILLSWAP — JOURNAL DE CONSTRUCTION
+========================================
+
+----------------------------------------
+ÉTAPE 1 — Squelette du projet
+----------------------------------------
+Fichiers créés :
+
+backend/pom.xml
+  - Spring Boot 3.3.5, Java 21
+  - Dépendances : web, security, data-jpa, validation, postgresql, flyway,
+    jjwt 0.12.6, springdoc 2.6.0, lombok, spring-security-test, H2 (tests)
+
+backend/src/main/java/com/skillswap/SkillSwapApplication.java
+  - Point d'entrée Spring Boot
+
+backend/src/main/java/com/skillswap/{auth,user,matching,session,rating,common}/package-info.java
+  - Squelettes des 6 packages domaines (vides, à remplir aux étapes suivantes)
+
+backend/src/main/resources/application.yml
+  - Datasource avec variables d'env substituables (DB_HOST, DB_PORT, etc.)
+  - JPA : ddl-auto=validate (Flyway seul maître du schéma)
+  - Flyway activé, localisation classpath:db/migration
+  - JWT : secret via ${JWT_SECRET}, expiration 24h, refresh 7j
+  - Matching weights configurables : bilateral 50%, common-skills 20%,
+    reputation 20%, recent-activity 10%, seuil activité 30 jours
+
+backend/src/test/resources/application-test.yml
+  - H2 in-memory en mode PostgreSQL, Flyway désactivé, ddl-auto=create-drop
+
+backend/src/test/java/com/skillswap/SkillSwapApplicationTests.java
+  - Test de chargement du contexte Spring (@ActiveProfiles("test"))
+
+backend/Dockerfile
+  - Multi-stage : maven:3.9 (build) → eclipse-temurin:21-jre-alpine (runtime)
+  - Utilisateur non-root (skillswap)
+
+frontend/Dockerfile
+  - Placeholder nginx:1.27-alpine (sera complété à l'étape 6)
+
+docker-compose.yml
+  - Service postgres (healthcheck pg_isready)
+  - Service backend (dépend de postgres healthy, vars d'env DB_* et JWT_SECRET)
+  - Service frontend (placeholder, dépend de backend)
+  - Volume nommé skillswap_postgres_data
+
+.gitignore
+  - Java/Maven, Node, IntelliJ, VS Code, OS, secrets (.env)
+
+README.md
+  - Description du projet, stack, architecture domaines, prérequis,
+    lancement Docker et local, tableau de progression des étapes
+
+----------------------------------------
+ÉTAPE 2 — À venir
+----------------------------------------
+  Entités JPA + repositories + migrations Flyway (schéma + seed 20-30 profils)

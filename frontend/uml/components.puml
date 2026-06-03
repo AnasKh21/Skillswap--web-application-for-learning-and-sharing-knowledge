@@ -1,0 +1,99 @@
+@startuml SkillSwap Frontend Components
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFBF5
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #FF6B35
+  FontColor #1A1A2E
+  FontSize 13
+}
+skinparam package {
+  BackgroundColor #FFF0E6
+  BorderColor #FFB703
+}
+skinparam arrow {
+  Color #FF6B35
+}
+
+title SkillSwap — React Component Architecture
+
+package "Entry Point" {
+  [main.jsx] as main
+  [App.jsx] as app
+}
+
+package "Context" {
+  [AuthContext] as auth
+}
+
+package "Layout" {
+  [Layout] as layout
+  [Sidebar] as sidebar
+  [BottomNav] as bottomnav
+}
+
+package "Pages" {
+  [AuthPage] as authpage
+  [DiscoverPage] as discover
+  [RequestsPage] as requests
+  [SessionsPage] as sessions
+  [ProfilePage] as profile
+}
+
+package "Cards" {
+  [SwipeCard] as swipe
+  [RequestCard] as reqcard
+  [SessionCard] as sesscard
+}
+
+package "UI Components" {
+  [Button] as btn
+  [Badge] as badge
+  [Avatar] as avatar
+  [StarRating / StarPicker] as stars
+  [SkillTag] as skilltag
+}
+
+package "Data / API" {
+  [mockData.js] as mock
+  [api/client.js] as apiclient
+}
+
+main --> app
+main --> auth
+
+app --> authpage
+app --> layout
+
+layout --> sidebar
+layout --> bottomnav
+layout --> discover
+layout --> requests
+layout --> sessions
+layout --> profile
+
+discover --> swipe
+requests --> reqcard
+sessions --> sesscard
+
+swipe   --> avatar
+reqcard --> avatar
+sesscard --> avatar
+
+profile --> stars
+sesscard --> stars
+
+swipe    --> btn
+reqcard  --> btn
+sesscard --> btn
+profile  --> btn
+
+discover --> mock
+requests --> mock
+sessions --> mock
+profile  --> mock
+
+auth --> apiclient
+
+@enduml
