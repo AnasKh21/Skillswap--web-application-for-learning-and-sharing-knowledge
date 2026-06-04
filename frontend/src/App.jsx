@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/layout/Layout'
+import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import DiscoverPage from './pages/DiscoverPage'
 import RequestsPage from './pages/RequestsPage'
@@ -17,6 +18,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/" element={user ? <Navigate to="/discover" replace /> : <LandingPage />} />
       <Route
         path="/auth"
         element={user ? <Navigate to="/discover" replace /> : <AuthPage />}

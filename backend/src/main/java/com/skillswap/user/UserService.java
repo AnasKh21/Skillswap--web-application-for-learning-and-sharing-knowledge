@@ -85,4 +85,8 @@ public class UserService {
     public List<UserSkill> getSkillsForUser(UUID userId) {
         return userSkillRepository.findByUserId(userId);
     }
+
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
 }

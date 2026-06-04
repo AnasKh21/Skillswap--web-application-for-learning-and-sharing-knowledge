@@ -20,30 +20,57 @@ const Field = ({ icon: Icon, type = 'text', placeholder, value, onChange, rightE
 )
 
 export default function AuthPage() {
-  const [tab, setTab] = useState('login')
+  const [tab, setTab]         = useState('login')
   const [showPass, setShowPass] = useState(false)
-  const [email, setEmail]       = useState('')
+  const [email, setEmail]     = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName]         = useState('')
-  const { login, register }     = useAuth()
+  const [name, setName]       = useState('')
+  const [error, setError]     = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const { login, register }   = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (tab === 'login') login(email, password)
-    else register(email, name, password)
-    navigate('/discover')
+    setError(null)
+    setSubmitting(true)
+    try {
+      if (tab === 'login') {
+        await login(email, password)
+      } else {
+        // ─────────────────────────────────────────────────────────
+        // EXERCICE 7 — Appelle register() avec les bons paramètres
+        //
+        // La fonction register() dans AuthContext attend :
+        //   register(displayName, email, password)
+        //
+        // Le formulaire a un champ "name" (variable : name)
+        // mais l'API attend "displayName".
+        //
+        // Hints :
+        //   - Le premier argument de register() est le displayName
+        //   - La variable du formulaire s'appelle "name"
+        //   - Donc : await register(???, email, password)
+        //
+        // ─────────────────────────────────────────────────────────
+        // TODO Exercice 7 — remplace la ligne ci-dessous
+        await register(name, email, password)
+      }
+      navigate('/discover')
+    } catch (err) {
+      const msg = err.response?.data?.message ?? err.message ?? 'Something went wrong'
+      setError(msg)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <div className="min-h-screen flex">
       {/* ── Left panel (desktop only) ─── */}
       <div className="hidden md:flex flex-1 bg-gradient-hero items-center justify-center p-12 relative overflow-hidden">
-        {/* Decorative circles */}
         <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/10 rounded-full" />
         <div className="absolute -bottom-10 -right-10 w-60 h-60 bg-white/10 rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full" />
-
         <div className="relative z-10 text-white text-center">
           <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center mx-auto mb-6 shadow-2xl">
             <Zap size={40} className="text-white fill-white" />
@@ -68,14 +95,11 @@ export default function AuthPage() {
       {/* ── Right panel (form) ─── */}
       <div className="flex-1 flex items-center justify-center p-6 bg-surface">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
           <div className="md:hidden text-center mb-8">
             <div className="w-14 h-14 rounded-2xl bg-gradient-brand flex items-center justify-center mx-auto mb-3 shadow-card">
               <Zap size={28} className="text-white fill-white" />
             </div>
-            <h1 className="text-2xl font-black text-dark">
-              Skill<span className="text-primary">Swap</span>
-            </h1>
+            <h1 className="text-2xl font-black text-dark">Skill<span className="text-primary">Swap</span></h1>
           </div>
 
           <h2 className="text-2xl font-bold text-dark mb-1">
@@ -85,12 +109,11 @@ export default function AuthPage() {
             {tab === 'login' ? 'Sign in to continue swapping skills' : 'Create your account for free'}
           </p>
 
-          {/* Tab switcher */}
           <div className="flex gap-1 bg-orange-50 p-1 rounded-2xl mb-6">
             {['login', 'register'].map((t) => (
               <button
                 key={t}
-                onClick={() => setTab(t)}
+                onClick={() => { setTab(t); setError(null) }}
                 className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all
                   ${tab === t ? 'bg-white text-primary shadow-sm' : 'text-muted hover:text-primary'}`}
               >
@@ -98,6 +121,12 @@ export default function AuthPage() {
               </button>
             ))}
           </div>
+
+          {error && (
+            <div className="mb-4 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.form
@@ -110,22 +139,9 @@ export default function AuthPage() {
               className="space-y-4"
             >
               {tab === 'register' && (
-                <Field
-                  icon={User}
-                  placeholder="Display name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <Field icon={User} placeholder="Display name" value={name} onChange={(e) => setName(e.target.value)} />
               )}
-
-              <Field
-                icon={Mail}
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-
+              <Field icon={Mail} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
               <Field
                 icon={Lock}
                 type={showPass ? 'text' : 'password'}
@@ -138,18 +154,12 @@ export default function AuthPage() {
                   </button>
                 }
               />
-
-              <Button type="submit" size="lg" className="w-full mt-2">
-                {tab === 'login' ? 'Sign In' : 'Create Account'}
-                <ArrowRight size={18} />
+              <Button type="submit" size="lg" className="w-full mt-2" disabled={submitting}>
+                {submitting ? 'Loading...' : tab === 'login' ? 'Sign In' : 'Create Account'}
+                {!submitting && <ArrowRight size={18} />}
               </Button>
             </motion.form>
           </AnimatePresence>
-
-          <p className="text-center text-xs text-muted mt-6">
-            By continuing you agree to our{' '}
-            <span className="text-primary font-medium cursor-pointer hover:underline">Terms of Service</span>.
-          </p>
         </div>
       </div>
     </div>
