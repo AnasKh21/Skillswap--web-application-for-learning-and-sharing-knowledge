@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Edit2, Plus, Trash2, BookOpen, Lightbulb } from 'lucide-react'
+import { Edit2, Trash2, BookOpen, Lightbulb } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Avatar from '../components/ui/Avatar'
+import ImageUpload from '../components/ui/ImageUpload'
+import SkillPicker from '../components/ui/SkillPicker'
 import { StarDisplay } from '../components/ui/StarRating'
 import Button from '../components/ui/Button'
 import { getMySkills, addSkill, removeSkill, updateProfile } from '../api/users'
+import { uploadAvatar, uploadBanner } from '../api/media'
 import { getAllSkills } from '../api/skills'
 import { mapSkillsToUI } from '../utils/mappers'
+
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
 function SkillSection({ title, icon: Icon, color, skills, onRemove, onAdd }) {
   return (
@@ -29,58 +34,32 @@ function SkillSection({ title, icon: Icon, color, skills, onRemove, onAdd }) {
         ))}
       </div>
       <button onClick={onAdd} className="flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors font-medium">
-        <Plus size={14} /> Add skill
+        + Add skill
       </button>
     </div>
   )
 }
 
-function AddSkillModal({ onClose, onAdd, allSkills }) {
-  const [selected, setSelected] = useState(null)
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-4"
-      onClick={e => e.target === e.currentTarget && onClose()}>
-      <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-        className="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl">
-        <h3 className="text-lg font-bold text-dark mb-4">Add a skill</h3>
-        <div className="flex flex-wrap gap-2 mb-5 max-h-48 overflow-y-auto no-scrollbar">
-          {allSkills.map(s => (
-            <button key={s.id} onClick={() => setSelected(s)}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all
-                ${selected?.id === s.id ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-dark border-gray-200 hover:border-primary hover:text-primary'}`}>
-              {s.name}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button className="flex-1" disabled={!selected} onClick={() => { onAdd(selected); onClose() }}>Add</Button>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
 export default function ProfilePage() {
-  const { user }                              = useAuth()
+  const { user, updateUser }                  = useAuth()
   const [editMode, setEditMode]               = useState(false)
   const [bio, setBio]                         = useState(user?.bio ?? '')
   const [teachSkills, setTeachSkills]         = useState([])
   const [learnSkills, setLearnSkills]         = useState([])
   const [allSkills, setAllSkills]             = useState([])
   const [userSkillIds, setUserSkillIds]       = useState([])
-  const [modal, setModal]                     = useState(null)
+  const [modal, setModal]                     = useState(null)   // 'teach' | 'learn' | null
   const [loading, setLoading]                 = useState(true)
+  const [uploading, setUploading]             = useState(false)
 
   useEffect(() => {
     Promise.all([getMySkills(), getAllSkills()])
       .then(([skillsRes, allSkillsRes]) => {
         const apiSkills = skillsRes.data
-        // Exercice 4 : mapSkillsToUI sépare OFFERED → teach et WANTED → learn
         const { teachSkills: teach, learnSkills: learn } = mapSkillsToUI(apiSkills)
         setTeachSkills(teach.map(name => ({ name })))
         setLearnSkills(learn.map(name => ({ name })))
-        setUserSkillIds(apiSkills)  // garde les IDs pour la suppression
+        setUserSkillIds(apiSkills)
         setAllSkills(allSkillsRes.data)
       })
       .catch(console.error)
@@ -89,11 +68,12 @@ export default function ProfilePage() {
 
   const handleSaveBio = async () => {
     await updateProfile({ displayName: user.displayName, bio })
+    updateUser({ bio })
     setEditMode(false)
   }
 
-  const handleAddSkill = async (skill, type) => {
-    await addSkill({ skillId: skill.id, type, level: 1 })
+  const handleAddSkill = async (skill, type, level) => {
+    await addSkill({ skillId: skill.id, type, level })
     if (type === 'OFFERED') setTeachSkills(p => [...p, { name: skill.name }])
     else setLearnSkills(p => [...p, { name: skill.name }])
   }
@@ -107,11 +87,37 @@ export default function ProfilePage() {
     }
   }
 
+  const handleAvatarUpload = async (file) => {
+    setUploading(true)
+    try {
+      const res = await uploadAvatar(file)
+      updateUser({ avatarUrl: res.data.avatarUrl })
+    } catch (e) {
+      console.error('Avatar upload failed', e)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleBannerUpload = async (file) => {
+    setUploading(true)
+    try {
+      const res = await uploadBanner(file)
+      updateUser({ bannerUrl: res.data.bannerUrl })
+    } catch (e) {
+      console.error('Banner upload failed', e)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const avatarUser = {
     ...user,
     avatarBg: 'from-orange-400 to-pink-500',
     avatarInitials: user?.displayName?.charAt(0).toUpperCase(),
   }
+
+  const bannerUrl = user?.bannerUrl ? `${API_BASE}${user.bannerUrl}` : null
 
   if (loading || !user) return (
     <div className="flex items-center justify-center h-64">
@@ -122,15 +128,32 @@ export default function ProfilePage() {
   return (
     <div className="page-enter space-y-5">
       <div className="bg-white rounded-3xl border border-orange-100 shadow-sm overflow-hidden">
-        <div className={`h-24 bg-gradient-to-br ${avatarUser.avatarBg}`} />
+
+        {/* Bannière cliquable */}
+        <ImageUpload onUpload={handleBannerUpload} className="h-24 w-full" rounded="rounded-none">
+          {bannerUrl
+            ? <img src={bannerUrl} alt="banner" className="h-24 w-full object-cover" />
+            : <div className={`h-24 bg-gradient-to-br ${avatarUser.avatarBg}`} />
+          }
+        </ImageUpload>
+
         <div className="px-5 pb-5">
           <div className="-mt-10 mb-3 flex items-end justify-between">
-            <Avatar user={avatarUser} size="xl" className="border-4 border-white shadow-lg" />
-            <Button variant={editMode ? 'primary' : 'ghost'} size="sm"
-              onClick={() => editMode ? handleSaveBio() : setEditMode(true)}>
-              <Edit2 size={14} /> {editMode ? 'Save' : 'Edit'}
-            </Button>
+
+            {/* Avatar cliquable */}
+            <ImageUpload onUpload={handleAvatarUpload} className="inline-flex">
+              <Avatar user={avatarUser} size="xl" className="border-4 border-white shadow-lg" />
+            </ImageUpload>
+
+            <div className="flex items-center gap-2">
+              {uploading && <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+              <Button variant={editMode ? 'primary' : 'ghost'} size="sm"
+                onClick={() => editMode ? handleSaveBio() : setEditMode(true)}>
+                <Edit2 size={14} /> {editMode ? 'Save' : 'Edit'}
+              </Button>
+            </div>
           </div>
+
           <h1 className="text-xl font-bold text-dark">{user.displayName}</h1>
           <p className="text-sm text-muted">{user.email}</p>
           <div className="flex items-center gap-1 mt-2">
@@ -159,8 +182,12 @@ export default function ProfilePage() {
         onRemove={s => handleRemoveSkill(s, 'learn')} onAdd={() => setModal('learn')} />
 
       {modal && (
-        <AddSkillModal allSkills={allSkills} onClose={() => setModal(null)}
-          onAdd={skill => handleAddSkill(skill, modal === 'teach' ? 'OFFERED' : 'WANTED')} />
+        <SkillPicker
+          allSkills={allSkills}
+          type={modal}
+          onClose={() => setModal(null)}
+          onAdd={(skill, level) => handleAddSkill(skill, modal === 'teach' ? 'OFFERED' : 'WANTED', level)}
+        />
       )}
     </div>
   )

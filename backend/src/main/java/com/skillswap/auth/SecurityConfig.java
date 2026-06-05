@@ -84,8 +84,10 @@ public class SecurityConfig {
                     "/api-docs/**",
                     "/webjars/**"
                 ).permitAll()
-                // Public: skill catalogue + public profiles
-                .requestMatchers("/api/skills").permitAll()
+                // Public: skill catalogue
+                .requestMatchers("/api/skills", "/api/skills/**").permitAll()
+                // Public: fichiers uploadés (avatars, bannières)
+                .requestMatchers("/uploads/**").permitAll()
                 // Public read-only: any user profile, skill list
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}", "/api/ratings/user/**").permitAll()
                 // Everything else requires a valid JWT token

@@ -1,15 +1,18 @@
 package com.skillswap.user;
 
+import com.skillswap.media.MediaService;
 import com.skillswap.user.dto.AddUserSkillDto;
 import com.skillswap.user.dto.UpdateProfileDto;
 import com.skillswap.user.dto.UserResponseDto;
 import com.skillswap.user.dto.UserSkillDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -29,10 +32,12 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService userService;
+    private final UserService  userService;
+    private final MediaService mediaService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(UserService userService, MediaService mediaService) {
+        this.userService  = userService;
+        this.mediaService = mediaService;
     }
 
     // GET /api/users/me — current user's profile
@@ -118,6 +123,36 @@ public class UserController {
         }
     }
 
+    // POST /api/users/me/avatar — upload photo de profil
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponseDto> uploadAvatar(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("file") MultipartFile file) {
+        User current = resolveCurrentUser(userDetails);
+        try {
+            String url = mediaService.storeAvatar(current.getId(), file);
+            User updated = userService.updateAvatar(current.getId(), url);
+            return ResponseEntity.ok(toDto(updated));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    // POST /api/users/me/banner — upload bannière
+    @PostMapping(value = "/me/banner", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponseDto> uploadBanner(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("file") MultipartFile file) {
+        User current = resolveCurrentUser(userDetails);
+        try {
+            String url = mediaService.storeBanner(current.getId(), file);
+            User updated = userService.updateBanner(current.getId(), url);
+            return ResponseEntity.ok(toDto(updated));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────
 
     // Resolves the logged-in user from the JWT-backed UserDetails
@@ -133,6 +168,8 @@ public class UserController {
                 .email(user.getEmail())
                 .bio(user.getBio())
                 .averageRating(user.getAverageRating())
+                .avatarUrl(user.getAvatarUrl())
+                .bannerUrl(user.getBannerUrl())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

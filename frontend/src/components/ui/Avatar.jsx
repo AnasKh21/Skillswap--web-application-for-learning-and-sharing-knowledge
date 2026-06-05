@@ -1,3 +1,5 @@
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+
 export default function Avatar({ user, size = 'md', className = '' }) {
   const sizes = {
     sm:   'w-8  h-8  text-xs',
@@ -7,15 +9,20 @@ export default function Avatar({ user, size = 'md', className = '' }) {
     '2xl':'w-32 h-32 text-3xl',
   }
 
-  const bg = user?.avatarBg ?? 'from-primary to-accent'
+  const bg  = user?.avatarBg ?? 'from-primary to-accent'
+  const img = user?.avatarUrl ? `${API_BASE}${user.avatarUrl}` : null
 
   return (
     <div className={`
-      ${sizes[size]} rounded-full flex items-center justify-center
-      bg-gradient-to-br ${bg} text-white font-bold flex-shrink-0
-      ${className}
+      ${sizes[size]} rounded-full overflow-hidden flex-shrink-0
+      bg-gradient-to-br ${bg} ${className}
     `}>
-      {user?.avatarInitials ?? '?'}
+      {img
+        ? <img src={img} alt={user?.displayName ?? ''} className="w-full h-full object-cover" />
+        : <div className="w-full h-full flex items-center justify-center text-white font-bold">
+            {user?.avatarInitials ?? '?'}
+          </div>
+      }
     </div>
   )
 }

@@ -143,8 +143,35 @@ export function mapRequestToCard(request) {
     ...request,
     offeredSkill: request.offeredSkill.name,
     wantedSkill: request.wantedSkill.name,
-  }   
-  
+  }
+
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Adapte un MatchCandidateDto au format attendu par SwipeCard.
+//
+// Le backend retourne aujourd'hui :
+//   { userId, displayName, averageRating, theyTeachMe, iTeachThem, score }
+//
+// Les champs manquants (bio, teachSkills, learnSkills) seront ajoutés
+// au MatchCandidateDto côté backend quand on enrichira le moteur —
+// les ?? null / ?? [] ici les prendront automatiquement sans modifier ce fichier.
+// ─────────────────────────────────────────────────────────────────────────────
+export function mapCandidateToCard(candidate) {
+  return {
+    id:             candidate.userId,
+    displayName:    candidate.displayName,
+    bio:            candidate.bio ?? null,
+    averageRating:  candidate.averageRating,
+    avatarUrl:      candidate.avatarUrl ?? null,
+    avatarBg:       avatarBgFromId(candidate.userId),
+    avatarInitials: candidate.displayName?.charAt(0).toUpperCase(),
+    teachSkills:    candidate.teachSkills ?? [],
+    learnSkills:    candidate.learnSkills ?? [],
+    score:          candidate.score,
+    theyTeachMe:    candidate.theyTeachMe,
+    iTeachThem:     candidate.iTeachThem,
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

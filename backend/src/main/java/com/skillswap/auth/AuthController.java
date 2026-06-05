@@ -131,6 +131,8 @@ public class AuthController {
                 .email(user.getEmail())
                 .bio(user.getBio())
                 .averageRating(user.getAverageRating())
+                .avatarUrl(user.getAvatarUrl())
+                .bannerUrl(user.getBannerUrl())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

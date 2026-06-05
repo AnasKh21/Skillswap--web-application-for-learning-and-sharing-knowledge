@@ -18,4 +18,7 @@ public interface UserSkillRepository extends JpaRepository<UserSkill, UUID> {
 
     // Check if a user already has a specific skill registered
     boolean existsByUserIdAndSkillId(UUID userId, UUID skillId);
+
+    // Fetch all skills for a set of users in one query (avoids N+1 when enriching match candidates)
+    List<UserSkill> findByUserIdIn(java.util.Collection<UUID> userIds);
 }

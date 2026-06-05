@@ -24,6 +24,11 @@ spring:
         format_sql: true
         default_schema: public
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -35,6 +40,10 @@ app:
     secret: ${JWT_SECRET:S3cr3tSkillSwapKeyMustBeAtLeast256BitsLongForHS256Algorithm!}
     expiration-ms: 3600000         # 1 h (use 900000 = 15 min in production)
     refresh-expiration-ms: 604800000  # 7 jours
+
+  # ── Upload ────────────────────────────────────────────────────────────────
+  media:
+    upload-dir: ./uploads
 
   # ── Matching weights (somme = 1.0) ─────────────────────────────────────────
   matching:

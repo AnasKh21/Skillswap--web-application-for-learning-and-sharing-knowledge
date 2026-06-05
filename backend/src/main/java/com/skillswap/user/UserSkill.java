@@ -14,7 +14,13 @@ import java.util.UUID;
  *          Alice wants  "Guitar" at level 1
  */
 @Entity
-@Table(name = "user_skills")
+@Table(
+    name = "user_skills",
+    indexes = {
+        @Index(name = "idx_uskill_user_type",  columnList = "user_id, type"),
+        @Index(name = "idx_uskill_skill_type", columnList = "skill_id, type")
+    }
+)
 public class UserSkill {
 
     @Id

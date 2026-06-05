@@ -34,6 +34,12 @@ public class User {
     @Column(name = "average_rating")
     private Double averageRating;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(name = "banner_url")
+    private String bannerUrl;
+
     // updatable = false means this field cannot be changed after it is first set
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -71,6 +77,8 @@ public class User {
 
     public Double getAverageRating() { return averageRating; }
 
+    public String getAvatarUrl() { return avatarUrl; }
+    public String getBannerUrl() { return bannerUrl; }
     public Instant getCreatedAt() { return createdAt; }
 
     // ── Setters ─────────────────────────────────────────────────────────────────
@@ -89,6 +97,8 @@ public class User {
 
     public void setAverageRating(Double averageRating) { this.averageRating = averageRating; }
 
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
     // ── equals & hashCode ───────────────────────────────────────────────────────

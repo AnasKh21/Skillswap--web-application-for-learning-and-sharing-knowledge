@@ -28,5 +28,7 @@ public class UserResponseDto {
     private String email;
     private String bio;
     private Double averageRating;
+    private String avatarUrl;
+    private String bannerUrl;
     private Instant createdAt;
 }

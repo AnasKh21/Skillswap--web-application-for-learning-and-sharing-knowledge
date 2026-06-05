@@ -89,4 +89,18 @@ public class UserService {
     public List<User> findAllUsers() {
         return userRepository.findAll();
     }
+
+    public User updateAvatar(UUID userId, String avatarUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setAvatarUrl(avatarUrl);
+        return userRepository.save(user);
+    }
+
+    public User updateBanner(UUID userId, String bannerUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setBannerUrl(bannerUrl);
+        return userRepository.save(user);
+    }
 }
