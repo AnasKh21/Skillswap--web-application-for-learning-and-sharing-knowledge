@@ -2,7 +2,7 @@ package com.skillswap.matching;
 
 import com.skillswap.common.SkillType;
 import com.skillswap.matching.dto.MatchCandidateDto;
-import com.skillswap.user.Skill;
+import com.skillswap.skill.Skill;
 import com.skillswap.user.User;
 import com.skillswap.user.UserSkill;
 import com.skillswap.user.UserSkillRepository;
