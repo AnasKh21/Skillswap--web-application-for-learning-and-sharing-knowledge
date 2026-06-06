@@ -41,9 +41,11 @@ app:
     expiration-ms: 3600000         # 1 h (use 900000 = 15 min in production)
     refresh-expiration-ms: 604800000  # 7 jours
 
-  # ── Upload ────────────────────────────────────────────────────────────────
+  # ── Upload S3 ─────────────────────────────────────────────────────────────
   media:
-    upload-dir: ./uploads
+    s3:
+      bucket-name: ${AWS_S3_BUCKET:user-medias-bucket-sr-001}
+      region: ${AWS_S3_REGION:eu-north-1}
 
   # ── Matching weights (somme = 1.0) ─────────────────────────────────────────
   matching:

@@ -12,8 +12,6 @@ import { uploadAvatar, uploadBanner } from '../api/media'
 import { getAllSkills } from '../api/skills'
 import { mapSkillsToUI } from '../utils/mappers'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
-
 function SkillSection({ title, icon: Icon, color, skills, onRemove, onAdd }) {
   return (
     <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-4">
@@ -93,7 +91,9 @@ export default function ProfilePage() {
       const res = await uploadAvatar(file)
       updateUser({ avatarUrl: res.data.avatarUrl })
     } catch (e) {
-      console.error('Avatar upload failed', e)
+      const status = e.response?.status
+      const msg    = e.response?.data?.message ?? e.message
+      alert(`Avatar upload failed (${status ?? 'network error'}): ${msg}`)
     } finally {
       setUploading(false)
     }
@@ -105,7 +105,9 @@ export default function ProfilePage() {
       const res = await uploadBanner(file)
       updateUser({ bannerUrl: res.data.bannerUrl })
     } catch (e) {
-      console.error('Banner upload failed', e)
+      const status = e.response?.status
+      const msg    = e.response?.data?.message ?? e.message
+      alert(`Banner upload failed (${status ?? 'network error'}): ${msg}`)
     } finally {
       setUploading(false)
     }
@@ -117,7 +119,7 @@ export default function ProfilePage() {
     avatarInitials: user?.displayName?.charAt(0).toUpperCase(),
   }
 
-  const bannerUrl = user?.bannerUrl ? `${API_BASE}${user.bannerUrl}` : null
+  const bannerUrl = user?.bannerUrl ?? null
 
   if (loading || !user) return (
     <div className="flex items-center justify-center h-64">

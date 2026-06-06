@@ -2,6 +2,7 @@ package com.skillswap.matching;
 
 import com.skillswap.common.SkillType;
 import com.skillswap.matching.dto.MatchCandidateDto;
+import com.skillswap.media.MediaService;
 import com.skillswap.user.UserSkill;
 import com.skillswap.user.UserSkillRepository;
 import org.springframework.stereotype.Service;
@@ -14,11 +15,14 @@ public class MatchingService {
 
     private final MatchingRepository   matchingRepository;
     private final UserSkillRepository  userSkillRepository;
+    private final MediaService         mediaService;
 
     public MatchingService(MatchingRepository matchingRepository,
-                           UserSkillRepository userSkillRepository) {
+                           UserSkillRepository userSkillRepository,
+                           MediaService mediaService) {
         this.matchingRepository  = matchingRepository;
         this.userSkillRepository = userSkillRepository;
+        this.mediaService        = mediaService;
     }
 
     public List<MatchCandidateDto> findCandidates(UUID myId) {
@@ -33,11 +37,13 @@ public class MatchingService {
                     ? 0.5 + (p.getAverageRating() / 10.0)
                     : 0.75;
             double score = (p.getTheyTeachMe() + p.getITeachThem()) * ratingFactor;
+            String avatarUrl = p.getAvatarUrl() != null
+                    ? mediaService.presignUrl(p.getAvatarUrl()) : null;
             dtos.add(new MatchCandidateDto(
                     p.getId(),
                     p.getDisplayName(),
                     p.getBio(),
-                    p.getAvatarUrl(),
+                    avatarUrl,
                     p.getAverageRating(),
                     p.getTheyTeachMe(),
                     p.getITeachThem(),

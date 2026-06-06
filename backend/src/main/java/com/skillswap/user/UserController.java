@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,10 +35,12 @@ public class UserController {
 
     private final UserService  userService;
     private final MediaService mediaService;
+    private final UserMapper   userMapper;
 
-    public UserController(UserService userService, MediaService mediaService) {
+    public UserController(UserService userService, MediaService mediaService, UserMapper userMapper) {
         this.userService  = userService;
         this.mediaService = mediaService;
+        this.userMapper   = userMapper;
     }
 
     // GET /api/users/me — current user's profile
@@ -123,6 +126,28 @@ public class UserController {
         }
     }
 
+    // GET /api/users/{id}/avatar-url — presigned S3 URL for the avatar (authenticated only)
+    @GetMapping("/{id}/avatar-url")
+    public ResponseEntity<Map<String, String>> getAvatarUrl(@PathVariable UUID id) {
+        User user = userService.findUserById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getAvatarUrl() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No avatar for this user");
+        }
+        return ResponseEntity.ok(Map.of("url", mediaService.presignUrl(user.getAvatarUrl())));
+    }
+
+    // GET /api/users/{id}/banner-url — presigned S3 URL for the banner (authenticated only)
+    @GetMapping("/{id}/banner-url")
+    public ResponseEntity<Map<String, String>> getBannerUrl(@PathVariable UUID id) {
+        User user = userService.findUserById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getBannerUrl() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No banner for this user");
+        }
+        return ResponseEntity.ok(Map.of("url", mediaService.presignUrl(user.getBannerUrl())));
+    }
+
     // POST /api/users/me/avatar — upload photo de profil
     @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponseDto> uploadAvatar(
@@ -162,16 +187,7 @@ public class UserController {
     }
 
     private UserResponseDto toDto(User user) {
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .displayName(user.getDisplayName())
-                .email(user.getEmail())
-                .bio(user.getBio())
-                .averageRating(user.getAverageRating())
-                .avatarUrl(user.getAvatarUrl())
-                .bannerUrl(user.getBannerUrl())
-                .createdAt(user.getCreatedAt())
-                .build();
+        return userMapper.toDto(user);
     }
 
     private UserSkillDto toSkillDto(UserSkill us) {

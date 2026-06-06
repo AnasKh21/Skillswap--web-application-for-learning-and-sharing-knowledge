@@ -4,6 +4,7 @@ import com.skillswap.auth.dto.LoginRequestDto;
 import com.skillswap.auth.dto.LoginResponseDto;
 import com.skillswap.auth.dto.RegisterRequestDto;
 import com.skillswap.user.User;
+import com.skillswap.user.UserMapper;
 import com.skillswap.user.UserService;
 import com.skillswap.user.dto.UserResponseDto;
 import jakarta.servlet.http.Cookie;
@@ -38,10 +39,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final UserMapper  userMapper;
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService, UserService userService, UserMapper userMapper) {
         this.authService = authService;
         this.userService = userService;
+        this.userMapper  = userMapper;
     }
 
     // ─────────────────────────────────────────────────────────
@@ -125,15 +128,6 @@ public class AuthController {
     }
 
     private UserResponseDto toDto(User user) {
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .displayName(user.getDisplayName())
-                .email(user.getEmail())
-                .bio(user.getBio())
-                .averageRating(user.getAverageRating())
-                .avatarUrl(user.getAvatarUrl())
-                .bannerUrl(user.getBannerUrl())
-                .createdAt(user.getCreatedAt())
-                .build();
+        return userMapper.toDto(user);
     }
 }

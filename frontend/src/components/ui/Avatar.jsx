@@ -1,5 +1,3 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
-
 export default function Avatar({ user, size = 'md', className = '' }) {
   const sizes = {
     sm:   'w-8  h-8  text-xs',
@@ -10,7 +8,7 @@ export default function Avatar({ user, size = 'md', className = '' }) {
   }
 
   const bg  = user?.avatarBg ?? 'from-primary to-accent'
-  const img = user?.avatarUrl ? `${API_BASE}${user.avatarUrl}` : null
+  const img = user?.avatarUrl ?? null
 
   return (
     <div className={`

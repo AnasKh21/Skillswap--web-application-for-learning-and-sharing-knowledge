@@ -2,6 +2,7 @@ package com.skillswap.matching;
 
 import com.skillswap.common.SkillType;
 import com.skillswap.matching.dto.MatchCandidateDto;
+import com.skillswap.media.MediaService;
 import com.skillswap.skill.Skill;
 import com.skillswap.user.User;
 import com.skillswap.user.UserSkill;
@@ -26,6 +27,7 @@ class MatchingServiceTest {
 
     @Mock private MatchingRepository  matchingRepository;
     @Mock private UserSkillRepository userSkillRepository;
+    @Mock private MediaService        mediaService;
 
     @InjectMocks
     private MatchingService matchingService;

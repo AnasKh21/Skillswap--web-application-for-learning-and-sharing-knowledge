@@ -6,12 +6,10 @@ const toForm = (file) => {
   return form
 }
 
+// Ne pas forcer Content-Type : Axios détecte FormData et laisse le navigateur
+// ajouter le boundary automatiquement (ex: multipart/form-data; boundary=---xyz)
 export const uploadAvatar = (file) =>
-  client.post('/api/users/me/avatar', toForm(file), {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  client.post('/api/users/me/avatar', toForm(file))
 
 export const uploadBanner = (file) =>
-  client.post('/api/users/me/banner', toForm(file), {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  client.post('/api/users/me/banner', toForm(file))

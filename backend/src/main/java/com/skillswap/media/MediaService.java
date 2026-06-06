@@ -3,9 +3,15 @@ package com.skillswap.media;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.net.URI;
+import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,10 +19,21 @@ import java.util.UUID;
 public class MediaService {
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp", "image/gif");
-    private static final long MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+    private static final long MAX_BYTES = 5 * 1024 * 1024;
 
-    @Value("${app.media.upload-dir:./uploads}")
-    private String uploadDir;
+    @Value("${app.media.s3.bucket-name}")
+    private String bucket;
+
+    @Value("${app.media.s3.region}")
+    private String region;
+
+    private final S3Client s3;
+    private final S3Presigner presigner;
+
+    public MediaService(S3Client s3, S3Presigner presigner) {
+        this.s3 = s3;
+        this.presigner = presigner;
+    }
 
     public String storeAvatar(UUID userId, MultipartFile file) {
         return store(userId, file, "avatars");
@@ -26,20 +43,34 @@ public class MediaService {
         return store(userId, file, "banners");
     }
 
-    private String store(UUID userId, MultipartFile file, String subfolder) {
+    private String store(UUID userId, MultipartFile file, String folder) {
         validate(file);
         try {
-            Path dir = Paths.get(uploadDir).toAbsolutePath().resolve(subfolder);
-            Files.createDirectories(dir);
+            String key = folder + "/" + userId + "." + extension(file.getOriginalFilename());
 
-            String ext = extension(file.getOriginalFilename());
-            String filename = userId + "." + ext;
-            Files.copy(file.getInputStream(), dir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            s3.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(key)
+                            .contentType(file.getContentType())
+                            .contentLength(file.getSize())
+                            .build(),
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+            );
 
-            return "/uploads/" + subfolder + "/" + filename;
+            return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
         } catch (IOException e) {
-            throw new RuntimeException("Could not store file", e);
+            throw new RuntimeException("Could not upload file to S3", e);
         }
+    }
+
+    public String presignUrl(String storedUrl) {
+        String key = URI.create(storedUrl).getPath().substring(1);
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofHours(1))
+                .getObjectRequest(r -> r.bucket(bucket).key(key))
+                .build();
+        return presigner.presignGetObject(presignRequest).url().toString();
     }
 
     private void validate(MultipartFile file) {

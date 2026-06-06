@@ -18,6 +18,10 @@ app:
     secret: TestSecretKeyForJUnitTestsMustBeAtLeast256BitsLong!!
     expiration-ms: 3600000
     refresh-expiration-ms: 86400000
+  media:
+    s3:
+      bucket-name: test-bucket
+      region: eu-west-1
   matching:
     weights:
       bilateral: 0.50
